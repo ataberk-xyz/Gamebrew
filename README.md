@@ -321,7 +321,7 @@ A minimal, self-contained worked example (a single `play.example.*` verb) lives 
 ```
 Gamebrew/
 ├── README.md
-├── LICENSE                          ← MIT placeholder (owner to confirm)
+├── LICENSE                          ← MIT
 ├── assets/gamebrew-logo.svg
 ├── unity-package/                   ← drop this whole folder into your project (keep both subfolders)
 │   ├── Editor/Bridge/               ← the Editor-only assembly (Gamebrew.Bridge.Editor)
