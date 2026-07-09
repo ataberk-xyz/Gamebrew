@@ -1,28 +1,47 @@
 <svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Gamebrew logo">
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="256" y2="256" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#7C3AED"/>
-      <stop offset="1" stop-color="#4F46E5"/>
+    <linearGradient id="tile" x1="16" y1="8" x2="240" y2="248" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#8B5CF6"/>
+      <stop offset="0.55" stop-color="#6D28D9"/>
+      <stop offset="1" stop-color="#4338CA"/>
     </linearGradient>
-    <linearGradient id="brew" x1="80" y1="150" x2="176" y2="204" gradientUnits="userSpaceOnUse">
+    <linearGradient id="sheen" x1="0" y1="0" x2="0" y2="150" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#FDBA74" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#F59E0B" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="brew" x1="80" y1="148" x2="176" y2="206" gradientUnits="userSpaceOnUse">
       <stop offset="0" stop-color="#FDE68A"/>
       <stop offset="1" stop-color="#F59E0B"/>
     </linearGradient>
+    <clipPath id="tileClip"><rect width="256" height="256" rx="60"/></clipPath>
   </defs>
 
   <!-- app-icon tile -->
-  <rect width="256" height="256" rx="60" fill="url(#bg)"/>
-  <rect x="1.5" y="1.5" width="253" height="253" rx="58.5" fill="none" stroke="#FFFFFF" stroke-opacity="0.14" stroke-width="3"/>
+  <rect width="256" height="256" rx="60" fill="url(#tile)"/>
+  <g clip-path="url(#tileClip)">
+    <rect width="256" height="150" fill="url(#sheen)"/>
+    <!-- warm alchemical glow rising from the brew -->
+    <circle cx="128" cy="172" r="96" fill="url(#glow)"/>
+  </g>
+  <rect x="1.5" y="1.5" width="253" height="253" rx="58.5" fill="none" stroke="#FFFFFF" stroke-opacity="0.16" stroke-width="3"/>
 
   <!-- brewed liquid (fills the lower flask body) -->
   <path d="M91 150 L165 150 L182 190 A14 14 0 0 1 168 204 L88 204 A14 14 0 0 1 74 190 Z" fill="url(#brew)"/>
+  <!-- meniscus highlight on the liquid surface -->
+  <path d="M93 150 L163 150" stroke="#FFFBEB" stroke-opacity="0.65" stroke-width="2.5" stroke-linecap="round"/>
 
-  <!-- play triangle rising in the brew -->
-  <path d="M114 162 L114 194 L150 178 Z" fill="#FFFFFF"/>
+  <!-- play triangle rising in the brew (rounded corners) -->
+  <path d="M114 162 L114 194 L150 178 Z" fill="#FFFFFF" stroke="#FFFFFF" stroke-width="7" stroke-linejoin="round"/>
 
   <!-- rising bubbles -->
-  <circle cx="118" cy="136" r="6.5" fill="#FFFFFF" fill-opacity="0.9"/>
-  <circle cx="137" cy="121" r="4.5" fill="#FFFFFF" fill-opacity="0.75"/>
+  <circle cx="120" cy="140" r="6.5" fill="#FFFFFF" fill-opacity="0.92"/>
+  <circle cx="120" cy="140" r="2.2" fill="#F59E0B" fill-opacity="0.55"/>
+  <circle cx="137" cy="124" r="4.5" fill="#FFFFFF" fill-opacity="0.78"/>
+  <circle cx="108" cy="127" r="3" fill="#FFFFFF" fill-opacity="0.6"/>
 
   <!-- flask body outline -->
   <path d="M108 66 L108 112 L74 190 A14 14 0 0 0 88 204 L168 204 A14 14 0 0 0 182 190 L148 112 L148 66"
