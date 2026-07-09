@@ -1,27 +1,77 @@
-# Gamebrew — an AI-agent bridge for your Unity game
+<div align="center">
 
-**Gamebrew lets an AI agent drive a *running* Unity Editor.** The agent can walk the player,
-look around, orbit a free camera to inspect a prop, capture the game view as a PNG, read the
-scene graph, dump a live component's private fields as JSON, and (with your game's own verbs)
-interact with the world — all over a tiny loopback HTTP bridge. A **lease dispatcher** lets
-several agents **take turns** driving the one shared Editor without stepping on each other.
+<img src="assets/gamebrew-logo.svg" alt="Gamebrew" width="118" height="118" />
 
-It is a lightweight, self-contained alternative to third-party Unity MCP packages: ~20 small
-Editor C# files + one Node MCP server. No cloud, no auth, loopback only. Works with any
-Unity 6 project that uses the Input System.
+# Gamebrew
 
-> **Snapshot status.** This repo was extracted from a real game project. The generic core is
-> decoupled from that game and the `unity-package/` is now **self-contained**: it ships both an
-> Editor assembly (`Gamebrew.Bridge.Editor`) and its companion runtime assembly
-> (`Gamebrew.Bridge.Runtime`, holding `BridgeInputRelay`, `BridgeSimTime`, and the game-agnostic
-> movement/camera/navmesh **seams**). It should compile on drop-in given the two UPM packages in
-> §2. The only remaining game hooks are the **optional** stubbed verbs (perception, clock,
-> playtest report) — see [Status / what's decoupled vs TODO](#8-status--whats-decoupled-vs-todo).
-> Each is marked in-source with `TODO(decouple)`.
+### Hand your running Unity game to an AI agent.
+
+Gamebrew is a tiny, self-hosted bridge that lets an AI agent **play your Unity game** — walk the
+player, look around, orbit in to inspect a prop, capture what it sees, and read live scene state —
+over one loopback HTTP port. No cloud. No account. No SDK lock-in.
+
+![License](https://img.shields.io/badge/License-MIT-6E56CF.svg)
+![Unity](https://img.shields.io/badge/Unity-6-000?logo=unity&logoColor=white)
+![Node](https://img.shields.io/badge/Node-%E2%89%A518-3C873A?logo=node.js&logoColor=white)
+![MCP](https://img.shields.io/badge/MCP-server-8B5CF6)
+![localhost only](https://img.shields.io/badge/localhost-only-16A34A)
+
+<sub>Unity Editor ⇄ MCP ⇄ your agent — brew a playtester out of any Unity 6 project.</sub>
+
+</div>
 
 ---
 
-## 1. Architecture
+## ✨ What an agent can do
+
+| | |
+|---|---|
+| 🚶 **Move & navigate** | walk the player, NavMesh-path to any object by name |
+| 👁 **Look & orbit** | aim the camera, orbit a *free* camera around a prop to inspect it |
+| 📸 **See** | capture the game view to a PNG the agent then Reads |
+| 🔍 **Inspect** | dump any live component's private fields to JSON; read the scene tree |
+| ⌨️ **Interact** | send Input-System keyboard / mouse in Play Mode |
+| 🧪 **Test** | run EditMode tests, gate on compilation |
+| 🧩 **Extend** | add your own `play.*` verbs — auto-allowlisted, one `case` away |
+| 🎟️ **Share safely** | a lease dispatcher lets several agents take *turns* on the one Editor |
+
+## 🚀 Quickstart
+
+Two halves: the **Unity Editor bridge**, and a **Node MCP server** your agent talks to.
+
+**1 · Unity** — drop [`unity-package/`](#install--the-unity-half) into your project, install the two
+UPM packages (Input System + Newtonsoft JSON), then **Tools → Unity Bridge → Start**.
+
+**2 · MCP**
+
+```bash
+cd mcp && npm install
+```
+
+Point your MCP client (Claude, Cursor, …) at `mcp/src/index.mjs` — [config below](#install--the-mcp--node-half).
+
+**3 · Drive it** — enter Play Mode, then:
+
+```bash
+cd mcp
+./browse.sh my-agent play.navTo     '{"target":"Environment/Player","standoff":2}'
+./browse.sh my-agent play.orbitView '{"target":"Environment/Player","pitch":18,"yaw":45,"distance":2.5}'
+./browse.sh my-agent capture shot     # → Read the printed PNG path to SEE it
+```
+
+Your agent is now looking around your game.
+
+## 🧠 Why Gamebrew
+
+- **Self-hosted & tiny** — ~20 Editor C# files + one Node server. No cloud service, no account, loopback only.
+- **Agent-native** — speaks [MCP](https://modelcontextprotocol.io), so it drops straight into Claude, Cursor, or any MCP client as `bridge_*` tools.
+- **Multi-agent by design** — a cooperative lease lets several agents share one Editor without desyncing the world.
+- **Safe by default** — a default-deny allowlist keeps browsing agents to gameplay + inspection; lifecycle stays with you.
+- **Yours to extend** — game-specific verbs are one `case` away, and the movement layer sits behind clean, subclass-able seams.
+
+---
+
+## Architecture
 
 Two halves. The Unity Editor side hosts an HTTP listener; the Node side speaks MCP to your
 agent client and optionally serializes multiple agents through a lease dispatcher.
@@ -61,7 +111,7 @@ agent client and optionally serializes multiple agents through a lease dispatche
 
 ---
 
-## 2. Install — the Unity half
+## Install — the Unity half
 
 1. Copy the whole **`unity-package/`** into your project (e.g. `Assets/Gamebrew/`), keeping the
    `Editor/` and `Runtime/` subfolders intact. Unity regenerates the `.meta` files. Both
@@ -78,7 +128,7 @@ agent client and optionally serializes multiple agents through a lease dispatche
 
    The built-in **AI (NavMesh)** module (`UnityEngine.AIModule`) is used by `play.navTo` for
    *path planning* and needs no package. *Baking* a runtime NavMesh is your game's job — see the
-   `BridgeNavMeshBaker` seam in §8.
+   `BridgeNavMeshBaker` seam in [Status](#status--whats-decoupled-vs-todo).
 3. **Wire the movement seams (optional, only if you use `play.move`/`play.navTo`/`play.aimAt`).**
    The play-driver verbs locate game-agnostic abstract components — `BridgeLocomotor`,
    `BridgeCameraRig`, `BridgeNavMeshBaker` (in `Runtime/BridgeSeams.cs`) — via
@@ -90,7 +140,7 @@ agent client and optionally serializes multiple agents through a lease dispatche
    `http://127.0.0.1:8787/`. It survives domain reloads (remembers your Start/Stop intent in
    `SessionState`).
 
-## 3. Install — the MCP / Node half
+## Install — the MCP / Node half
 
 ```bash
 cd mcp
@@ -128,7 +178,7 @@ server off/on.
 
 ---
 
-## 4. The agent browse workflow
+## The agent browse workflow
 
 The bridge cannot stream video. An agent **sees** the world by capturing a still and Reading
 the PNG; it reads exact state with a component dump. A typical single-agent loop:
@@ -139,7 +189,7 @@ cd mcp
 ./browse.sh my-agent acquire
 
 # 2. NAVIGATE / LOOK  (play.* verbs; require the Editor to already be in Play Mode)
-./browse.sh my-agent play.navTo    '{"target":"Environment/Player","standoff":2}'
+./browse.sh my-agent play.navTo     '{"target":"Environment/Player","standoff":2}'
 ./browse.sh my-agent play.orbitView '{"target":"Environment/Player","pitch":18,"yaw":45,"distance":2.5}'
 
 # 3. CAPTURE → then Read the printed path to SEE the frame
@@ -168,7 +218,7 @@ each `Logs/orbit.png`. One head-on `navTo` capture is not enough to say a prop "
 
 ---
 
-## 5. Safety model
+## Safety model
 
 - **Loopback only.** The Editor bridge binds `127.0.0.1:8787`; the dispatcher binds
   `127.0.0.1:8788`. Nothing listens on a routable interface.
@@ -208,7 +258,7 @@ cd mcp && npm run test:dispatcher     # → "37 passed, 0 failed"
 
 ---
 
-## 6. Command vocabulary (generic verbs)
+## Command vocabulary (generic verbs)
 
 `<target>` is a scene path like `Environment/Player`. `play.*` verbs require Play Mode.
 
@@ -253,83 +303,70 @@ A minimal, self-contained worked example (a single `play.example.*` verb) lives 
 
 ---
 
-## 7. Repo layout
+## Repo layout
 
 ```
 Gamebrew/
-├── README.md                      ← you are here
-├── LICENSE                        ← MIT placeholder (owner to confirm)
-├── .gitignore
-├── unity-package/                ← drop this whole folder into your project (keep both subfolders)
-│   ├── Editor/Bridge/             ← the Editor-only assembly (Gamebrew.Bridge.Editor)
+├── README.md
+├── LICENSE                          ← MIT placeholder (owner to confirm)
+├── assets/gamebrew-logo.svg
+├── unity-package/                   ← drop this whole folder into your project (keep both subfolders)
+│   ├── Editor/Bridge/               ← the Editor-only assembly (Gamebrew.Bridge.Editor)
 │   │   ├── Gamebrew.Bridge.Editor.asmdef   ← refs Gamebrew.Bridge.Runtime by name
-│   │   ├── BridgeServer.cs        ← HttpListener on 127.0.0.1:8787 + Tools menu
-│   │   ├── CommandRouter.cs       ← the command switch (+ game-verb extension point)
+│   │   ├── BridgeServer.cs          ← HttpListener on 127.0.0.1:8787 + Tools menu
+│   │   ├── CommandRouter.cs         ← the command switch (+ game-verb extension point)
 │   │   ├── MainThreadDispatcher.cs, CompileCoordinator.cs, ConsoleLogBuffer.cs …
 │   │   ├── GameObjectResolver.cs, ComponentResolver.cs, JsonCoercion.cs
 │   │   ├── DebugDumpCoordinator.cs (debug.dumpComponent), GameViewCapture.cs
 │   │   ├── Play{Move,Nav,Orbit,View,Look}Coordinator.cs, PlayModeInputCoordinator.cs
-│   │   ├── EditorPlayModeCoordinator.cs, Test{Run,Obstacle}Coordinator.cs
-│   │   └── … (Tests/ folder NOT copied)
-│   └── Runtime/                   ← the companion runtime assembly (Gamebrew.Bridge.Runtime)
+│   │   └── EditorPlayModeCoordinator.cs, Test{Run,Obstacle}Coordinator.cs
+│   └── Runtime/                     ← the companion runtime assembly (Gamebrew.Bridge.Runtime)
 │       ├── Gamebrew.Bridge.Runtime.asmdef   ← refs Unity.InputSystem; all platforms
-│       ├── BridgeInputRelay.cs    ← generic Play-Mode keyboard injector (play.sendKey)
-│       ├── BridgeSimTime.cs       ← generic deterministic-dt seam (#if UNITY_EDITOR)
-│       └── BridgeSeams.cs         ← BridgeLocomotor / BridgeCameraRig / BridgeNavMeshBaker
+│       ├── BridgeInputRelay.cs      ← generic Play-Mode keyboard injector (play.sendKey)
+│       ├── BridgeSimTime.cs         ← generic deterministic-dt seam (#if UNITY_EDITOR)
+│       └── BridgeSeams.cs           ← BridgeLocomotor / BridgeCameraRig / BridgeNavMeshBaker
 ├── mcp/
-│   ├── package.json               ← "gamebrew-mcp"
-│   ├── browse.sh                  ← agent lease wrapper
-│   ├── src/index.mjs              ← MCP stdio server (bridge_* tools)
-│   ├── src/dispatcher.mjs         ← lease dispatcher on :8788
-│   ├── src/browseAllowlist.mjs    ← default-deny browse-safe command set
-│   ├── src/playModeUtils.mjs      ← enter/exit Play Mode helpers
+│   ├── package.json                 ← "gamebrew-mcp"
+│   ├── browse.sh                    ← agent lease wrapper
+│   ├── src/index.mjs                ← MCP stdio server (bridge_* tools)
+│   ├── src/dispatcher.mjs           ← lease dispatcher on :8788
+│   ├── src/browseAllowlist.mjs      ← default-deny browse-safe command set
+│   ├── src/playModeUtils.mjs        ← enter/exit Play Mode helpers
 │   └── scripts/{test-dispatcher,export-mcp-tool-descriptors}.mjs
 └── examples/
-    └── custom-verb/               ← "how a game adds its own play verbs" (worked example)
+    └── custom-verb/                 ← "how a game adds its own play verbs" (worked example)
         ├── README.md
         └── ExampleVerbCoordinator.cs
 ```
 
 ---
 
-## 8. Status / what's decoupled vs TODO
+## Status — what's decoupled vs TODO
+
+> **Snapshot.** Gamebrew was extracted from a real Unity game. The `unity-package/` is now
+> **self-contained** — an Editor assembly plus its bundled `Gamebrew.Bridge.Runtime` — and every
+> referenced symbol resolves to the package, UnityEngine/UnityEditor, Newtonsoft.Json, `System.*`,
+> or the Input System, so it's expected to compile on drop-in once the two UPM packages above are
+> present. The remaining game hooks below are **optional** and marked `TODO(decouple)` in-source.
 
 **Decoupled and generic:** the whole transport (HttpListener, CommandRouter, main-thread
 dispatch), scene/gameobject/component verbs, `debug.dumpComponent`, all `play.*` navigation /
 orbit / view / look coordinators, capture, tests, the console buffer — and the entire Node
-half (MCP server, lease dispatcher, allowlist, browse wrapper). The Editor namespace set is
-`Gamebrew.Bridge`. The companion **runtime assembly** `Gamebrew.Bridge.Runtime` is now bundled
-(`unity-package/Runtime/`) and holds the three game-agnostic pieces the Editor coordinators
-need: `BridgeInputRelay` (keyboard injection), `BridgeSimTime` (deterministic dt), and the
-`BridgeLocomotor` / `BridgeCameraRig` / `BridgeNavMeshBaker` **seams** the play-driver verbs
-locate via `FindAnyObjectByType`. The Node lease + allowlist logic passes its self-test 37/37.
+half (MCP server, lease dispatcher, allowlist, browse wrapper). The bundled runtime assembly
+holds the three game-agnostic pieces the Editor coordinators need: `BridgeInputRelay` (keyboard
+injection), `BridgeSimTime` (deterministic dt), and the `BridgeLocomotor` / `BridgeCameraRig` /
+`BridgeNavMeshBaker` **seams**. The Node lease + allowlist logic passes its self-test **37/37**.
 
-**What still needs a decision or hookup is marked `TODO(decouple)` in-source, or is an
-optional seam you implement.** The full list:
-
-| Marker location | What it is | What the owner must do |
+| Marker / seam | What it is | What you do |
 |---|---|---|
-| `Runtime/BridgeSeams.cs` | `BridgeLocomotor` / `BridgeCameraRig` / `BridgeNavMeshBaker` — abstract MonoBehaviour seams that replace the game's `PlayerController` / `FirstPersonCamera` / `NavMeshBootstrap`. The play-driver verbs call these by direct invocation. | Subclass each on your player / camera / navmesh baker (3-line adapters) **only if** you use `play.move` / `play.navTo` / `play.aimAt` / `test.spawnWall`. Absent seam → clean error, no crash. |
-| `CommandRouter.cs` (extension point ~line 140) | The game's own `play.*` verb cases were **removed**; a marked extension point remains. | Add your own `play.*` cases here (see `examples/`). |
-| `CommandRouter.cs` (`time.advance`) | Drove the game's clock system. Body **stubbed** to return an error. | Wire to your own time system, or delete the case. |
-| `CommandRouter.cs` (`perceive.aimHit` / `perceive.locate`) | Relied on a game perception/interaction helper (companion runtime, not in snapshot). Bodies **stubbed**. | Port a small perception helper, or delete the cases. |
-| `CommandRouter.cs` (`editor.getPlaytestReport`, `playtest.clear`) | Read the game's acceptance-test log. Bodies **stubbed**. | Wire to your own test log, or delete the cases. |
-| `PlayNavCoordinator.cs` | Default nav standoff was the game's interaction range × 0.9; **hardcoded** to `3.25f * 0.9f`. | Repoint at your own interaction range if you have one. |
-| `ComponentResolver.cs` & `DebugDumpCoordinator.cs` | Simple-name type resolution preferred the game's root namespace; replaced with a `PreferredNamespacePrefix` const **defaulting to `""` (preference off)**. | Set it to your game's root namespace for the convenience, or leave empty. |
-| `mcp/src/index.mjs:11, 293` | Two game-specific MCP tools (`bridge_run_playtest_scenario`, `bridge_get_playtest_report`) + their `playtestScenario.mjs` import were **removed**. | Add your own scenario tool if you want a one-shot acceptance run. |
+| `Runtime/BridgeSeams.cs` | Abstract MonoBehaviour seams standing in for a game's player controller / camera rig / navmesh baker. The play-driver verbs invoke them directly. | Subclass each on your player / camera / baker (3-line adapters) **only if** you use `play.move` / `play.navTo` / `play.aimAt` / `test.spawnWall`. Absent seam → clean error, no crash. |
+| `CommandRouter.cs` (extension point) | The origin game's own `play.*` verb cases were removed; a marked extension point remains. | Add your own `play.*` cases here (see `examples/`). |
+| `CommandRouter.cs` (`time.advance`) | Drove a game clock. Body **stubbed** to return an error. | Wire to your own time system, or delete the case. |
+| `CommandRouter.cs` (`perceive.aimHit` / `perceive.locate`) | Relied on a game perception/interaction helper. Bodies **stubbed**. | Port a small perception helper, or delete the cases. |
+| `CommandRouter.cs` (`editor.getPlaytestReport`, `playtest.clear`) | Read a game acceptance-test log. Bodies **stubbed**. | Wire to your own test log, or delete the cases. |
+| `PlayNavCoordinator.cs` | Default nav standoff was a game interaction range; **hardcoded** to `3.25f * 0.9f`. | Repoint at your own range if you have one. |
+| `ComponentResolver.cs` & `DebugDumpCoordinator.cs` | Simple-name type resolution preferred a game namespace; replaced with a `PreferredNamespacePrefix` const **defaulting to `""` (off)**. | Set it to your game's root namespace for the convenience, or leave empty. |
 
-### Owner decisions to make
+---
 
-1. **License** — this ships an MIT placeholder; confirm the real license (`LICENSE` has a
-   `TODO: owner to confirm`).
-2. **Final package name / namespace** — "Gamebrew" and `Gamebrew.Bridge` are working names.
-3. **Extension API** — decide whether game verbs stay a hand-edited `switch` in
-   `CommandRouter` (simple, current) or become a **registration API** (e.g. coordinators
-   self-register verb→handler at load) so a game can add verbs without editing core files.
-   The latter is the cleaner long-term boundary; the former is what exists today.
-
-> The `unity-package/` is now **self-contained** (Editor + bundled `Gamebrew.Bridge.Runtime`).
-> It could not be compiled *here* (no Unity toolchain in the extraction environment), but every
-> referenced symbol resolves to the package itself, UnityEngine/UnityEditor, Newtonsoft.Json,
-> System.*, or the Input System — so it is expected to compile on drop-in once the two UPM
-> packages in §2 are present. The remaining `TODO(decouple)` items are **optional** game hooks.
+<div align="center"><sub>Built for AI agents that need to <b>see</b> and <b>play</b>, not just read code. • MIT</sub></div>
