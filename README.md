@@ -83,6 +83,35 @@ in agent-imperative style. The three rules that matter most:
 
 The full loop, copy-paste command patterns, and a symptom→fix table are in [`AGENTS.md`](AGENTS.md).
 
+## Organizing a playtest crew (recommended, optional)
+
+Gamebrew is unopinionated about your agent stack — but here's a structure that works well for
+AI-assisted playtesting. It's how the tool was dogfooded: an orchestrator plus two browse
+specialists found real gameplay + visual bugs in a running game.
+
+| Role | Drives the bridge? | Job |
+|---|:--:|---|
+| **Orchestrator** | directly, `:8787` | Owns **lifecycle** — enter/exit Play Mode, load scenes, run tests, apply fixes — and **synthesizes + verifies** findings. Never lets a browsing agent do lifecycle. |
+| **Playtester agent** | lease window, `:8788` | Evaluates gameplay **logic · legibility · edges**: can a new player tell what to do? do interactions read? any soft-locks or exploits? |
+| **Visual / tech-art agent** | lease window, `:8788` | Evaluates **silhouettes · materials · lighting · HUD** against your art bible — orbits props, dumps material state. |
+| **Implementer agent(s)** | no | Fix what's confirmed (edit code); the orchestrator re-verifies with a fresh browse. |
+
+**The loop**
+
+1. The orchestrator enters Play Mode and dispatches the browse specialists — **one lease turn
+   each** (one game world = one driver at a time).
+2. Each agent runs the browse loop: `acquire → navigate / orbit / capture / dump → report → release`.
+3. The orchestrator **verifies every finding** against the code or capture before acting — agents
+   can be wrong (in dogfooding, an orbit *refuted* a "plain table" verdict that came from a bad
+   head-on angle). Confirm, don't trust.
+4. Implementers fix what's confirmed; the orchestrator recompiles and re-browses to prove the fix.
+5. **Feel is the human's.** Agents settle *understandable* and *correct*; "does it look / feel
+   good" routes to you.
+
+Start small — one orchestrator + one playtester is already useful; add the visual agent when art
+matters, and scale to a full crew for a deep eval. Per-agent driving rules are in
+[`AGENTS.md`](AGENTS.md).
+
 ---
 
 ## Architecture
