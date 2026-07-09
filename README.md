@@ -69,6 +69,19 @@ Your agent is now looking around your game.
 - **Safe by default** — a default-deny allowlist keeps browsing agents to gameplay + inspection; lifecycle stays with you.
 - **Yours to extend** — game-specific verbs are one `case` away, and the movement layer sits behind clean, subclass-able seams.
 
+## 🤖 For AI agents
+
+Driving Gamebrew yourself? Read **[`AGENTS.md`](AGENTS.md)** — the effective-use playbook, written
+in agent-imperative style. The three rules that matter most:
+
+1. **See by capturing _and Reading_ the PNG; trust `dump` over screenshots** for anything numeric —
+   a dim frame lies, live component fields don't.
+2. **Orbit props to judge them.** One head-on `capture` hides the silhouette — and `play.orbitView`
+   writes `Logs/orbit.png` (a free camera), *not* what a plain `capture` reads. Use the `orbit` verb.
+3. **Take turns and release.** Acquire the lease, drive, release — never sit on it.
+
+The full loop, copy-paste command patterns, and a symptom→fix table are in [`AGENTS.md`](AGENTS.md).
+
 ---
 
 ## Architecture
