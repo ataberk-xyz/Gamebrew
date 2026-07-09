@@ -1,0 +1,13 @@
+{
+    "name": "Gamebrew.Bridge.Editor",
+    "rootNamespace": "Gamebrew.Bridge",
+    "references": ["Gamebrew.Bridge.Runtime", "UnityEditor.TestRunner", "UnityEngine.TestRunner", "Unity.InputSystem"],
+    "includePlatforms": ["Editor"],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": ["Newtonsoft.Json.dll"],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": []
+}

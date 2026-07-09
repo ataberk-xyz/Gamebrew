@@ -1,0 +1,17 @@
+{
+  "name": "gamebrew-mcp",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "MCP stdio server + lease dispatcher for the Gamebrew Unity Editor HTTP bridge (scene, play mode, input, capture, inspect, take-turns browse)",
+  "scripts": {
+    "start": "node src/index.mjs",
+    "dispatcher": "node src/dispatcher.mjs",
+    "test:dispatcher": "node scripts/test-dispatcher.mjs",
+    "export-mcp-tools": "node scripts/export-mcp-tool-descriptors.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.1",
+    "zod": "^3.24.2"
+  }
+}

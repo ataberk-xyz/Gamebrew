@@ -1,0 +1,13 @@
+{
+    "name": "Gamebrew.Bridge.Runtime",
+    "rootNamespace": "Gamebrew.Bridge",
+    "references": ["Unity.InputSystem"],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": []
+}
