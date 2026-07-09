@@ -4,11 +4,12 @@
 
 # Gamebrew
 
-### Hand your running Unity game to an AI agent.
+### Let AI agents playtest your Unity game — while you build it.
 
-Gamebrew is a tiny, self-hosted bridge that lets an AI agent **play your Unity game** — walk the
-player, look around, orbit in to inspect a prop, capture what it sees, and read live scene state —
-over one loopback HTTP port. No cloud. No account. No SDK lock-in.
+Gamebrew is a **Unity MCP** that plugs AI agents into your game-dev loop as hands-on playtesters.
+They drive a *running* Unity Editor — walk the player, orbit in to inspect a prop, capture what
+they see, read live scene state, run tests — so bugs and rough edges surface **as you develop**.
+One loopback HTTP port. No cloud, no account, no SDK lock-in.
 
 ![License](https://img.shields.io/badge/License-MIT-6E56CF.svg)
 ![Unity](https://img.shields.io/badge/Unity-6-000?logo=unity&logoColor=white)
